@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fikra Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body data-theme="light">
+
+    <!-- ========== LOGIN ========== -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-box">
+            <div class="login-logo">
+                <span class="logo-icon">✦</span>
+                <h2 data-i18n="appName">Fikra Hub</h2>
+            </div>
+            <p class="login-subtitle" data-i18n="loginSubtitle">منصة إدارة الفريق والمشاريع</p>
+            <div id="loginError" class="error-msg hidden"></div>
+            <div class="input-group">
+                <input type="text" id="usernameInput" data-i18n-placeholder="usernamePlaceholder" placeholder="اسم المستخدم أو الإيميل" autocomplete="username">
+            </div>
+            <div class="input-group">
+                <input type="password" id="passwordInput" data-i18n-placeholder="passwordPlaceholder" placeholder="كلمة المرور" autocomplete="current-password">
+            </div>
+            <button id="loginBtn" data-i18n="loginBtn">تسجيل الدخول</button>
+            <p class="login-hint" data-i18n="loginHint">استخدم اسم المستخدم أو الإيميل الكامل</p>
+        </div>
+    </div>
+
+    <!-- ========== DASHBOARD ========== -->
+    <div id="dashboard" class="dashboard hidden">
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-wrap">
+                    <span class="logo-icon">✦</span>
+                    <span class="logo" data-i18n="appNameShort">Fikra</span>
+                </div>
+                <button id="toggleSidebar" class="icon-btn sidebar-toggle" title="Toggle">☰</button>
+            </div>
+
+            <nav>
+                <ul id="navList">
+                    <li data-page="teamChat" class="active" data-icon="💬"><span data-i18n="navTeamChat">دردشة الفريق</span></li>
+                    <li data-page="approvals" data-icon="✅"><span data-i18n="navApprovals">الموافقات</span></li>
+                    <li data-page="clientProjects" data-icon="📁"><span data-i18n="navClientProjects">مشاريع العملاء</span></li>
+                    <li data-page="taskCenter" data-icon="📋"><span data-i18n="navTaskCenter">مركز التاسكات</span></li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="footer-actions">
+                    <button id="themeToggle" class="footer-btn" title="Theme">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                    <button id="langToggle" class="footer-btn" title="Language">
+                        <span data-i18n="langToggle">EN</span>
+                    </button>
+                </div>
+                <div class="user-card" id="userProfileBtn">
+                    <div class="user-avatar" id="userAvatar">ي</div>
+                    <div class="user-info">
+                        <span class="user-name" id="userDisplayName">—</span>
+                        <span class="user-role" data-i18n="member">عضو</span>
+                    </div>
+                </div>
+                <button id="logoutBtn" class="logout-full">
+                    <span data-i18n="logout">تسجيل الخروج</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <button id="mobileMenuBtn" class="mobile-menu-btn">☰</button>
+                <h1 id="pageTitle" data-i18n="pageTeamChat">دردشة الفريق</h1>
+                <div class="header-actions">
+                    <span id="onlineStatus" class="online-status" data-i18n="online">متصل</span>
+                </div>
+            </header>
+
+            <section class="content-area">
+
+                <!-- TEAM CHAT -->
+                <div id="page-teamChat" class="page-section active">
+                    <div class="toolbar">
+                        <div class="search-bar">
+                            <input type="text" id="chatSearchInput" data-i18n-placeholder="searchPlaceholder" placeholder="ابحث في السجل...">
+                            <button class="btn-primary" id="chatSearchBtn" data-i18n="searchBtn">بحث</button>
+                        </div>
+                    </div>
+                    <div class="chat-container">
+                        <div class="chat-box" id="chatBox"></div>
+                        <div class="chat-input">
+                            <textarea id="messageInput" data-i18n-placeholder="messagePlaceholder" placeholder="اكتب رسالتك..." rows="1"></textarea>
+                            <button class="btn-primary send-btn" id="sendBtn" data-i18n="sendBtn">إرسال</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- APPROVALS -->
+                <div id="page-approvals" class="page-section">
+                    <div class="toolbar">
+                        <div class="search-bar">
+                            <input type="text" id="approvalSearchInput" data-i18n-placeholder="searchPlaceholder" placeholder="ابحث في الموافقات...">
+                            <button class="btn-primary" id="approvalSearchBtn" data-i18n="searchBtn">بحث</button>
+                        </div>
+                        <button class="btn-accent" id="addApprovalBtn">
+                            <span>+</span> <span data-i18n="addApproval">رفع للموافقة</span>
+                        </button>
+                    </div>
+                    <div class="cards-grid" id="approvalsList"></div>
+                </div>
+
+                <!-- CLIENT PROJECTS -->
+                <div id="page-clientProjects" class="page-section">
+                    <div class="toolbar" id="clientsToolbar">
+                        <div class="search-bar">
+                            <input type="text" id="clientSearchInput" data-i18n-placeholder="searchPlaceholder" placeholder="ابحث في المشاريع...">
+                            <button class="btn-primary" id="clientSearchBtn" data-i18n="searchBtn">بحث</button>
+                        </div>
+                        <button class="btn-accent" id="addClientBtn">
+                            <span>+</span> <span data-i18n="addClient">عميل جديد</span>
+                        </button>
+                    </div>
+                    <div class="cards-grid" id="clientsList"></div>
+
+                    <div id="clientDetail" class="detail-panel hidden">
+                        <div class="detail-header">
+                            <button class="btn-ghost" id="backToClients">← <span data-i18n="back">رجوع</span></button>
+                            <h2 id="clientDetailName">—</h2>
+                            <span id="clientDetailDeadline" class="deadline-badge"></span>
+                        </div>
+                        <div class="detail-tabs">
+                            <button class="tab active" data-tab="notes" data-i18n="tabNotes">ملاحظات</button>
+                            <button class="tab" data-tab="files" data-i18n="tabFiles">الملفات</button>
+                            <button class="tab" data-tab="chat" data-i18n="tabChat">شات العميل</button>
+                        </div>
+                        <div class="detail-body">
+                            <div id="tab-notes" class="tab-content active">
+                                <textarea id="clientNotes" rows="6" data-i18n-placeholder="notesPlaceholder" placeholder="ملاحظات العميل ومتطلباته..."></textarea>
+                                <button class="btn-primary mt-8" id="saveNotesBtn" data-i18n="save">حفظ</button>
+                            </div>
+                            <div id="tab-files" class="tab-content">
+                                <div class="upload-row">
+                                    <input type="file" id="clientFileInput">
+                                    <button class="btn-primary" id="uploadClientFileBtn" data-i18n="upload">رفع ملف</button>
+                                </div>
+                                <div id="clientFilesList" class="files-list"></div>
+                            </div>
+                            <div id="tab-chat" class="tab-content">
+                                <div class="member-filter" id="clientMemberFilter"></div>
+                                <div class="chat-box mini" id="clientChatBox"></div>
+                                <div class="chat-input">
+                                    <textarea id="clientMsgInput" rows="1" data-i18n-placeholder="messagePlaceholder" placeholder="اكتب رسالة..."></textarea>
+                                    <button class="btn-primary" id="clientSendBtn" data-i18n="sendBtn">إرسال</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TASK CENTER -->
+                <div id="page-taskCenter" class="page-section">
+                    <div class="toolbar">
+                        <div class="search-bar">
+                            <input type="text" id="taskSearchInput" data-i18n-placeholder="searchPlaceholder" placeholder="ابحث في التاسكات...">
+                            <button class="btn-primary" id="taskSearchBtn" data-i18n="searchBtn">بحث</button>
+                        </div>
+                        <button class="btn-accent" id="addTaskBtn">
+                            <span>+</span> <span data-i18n="addTask">إضافة تاسك</span>
+                        </button>
+                    </div>
+                    <div class="task-layout">
+                        <div class="task-col">
+                            <h3 data-i18n="myTasks">تاسكاتي</h3>
+                            <div id="myTasksList" class="task-list"></div>
+                        </div>
+                        <div class="task-col">
+                            <h3 data-i18n="allTasks">كل التاسكات</h3>
+                            <div id="allTasksList" class="task-list"></div>
+                        </div>
+                        <div class="task-col task-chat-col">
+                            <h3 data-i18n="taskChat">شات التاسكات</h3>
+                            <div class="chat-box mini" id="taskChatBox"></div>
+                            <div class="chat-input">
+                                <textarea id="taskMsgInput" rows="1" data-i18n-placeholder="messagePlaceholder" placeholder="اكتب رسالة..."></textarea>
+                                <button class="btn-primary" id="taskSendBtn" data-i18n="sendBtn">إرسال</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <!-- MODALS -->
+    <div id="approvalModal" class="modal hidden">
+        <div class="modal-box">
+            <h3 data-i18n="addApproval">رفع للموافقة</h3>
+            <textarea id="approvalDesc" rows="3" data-i18n-placeholder="descPlaceholder" placeholder="وصف الملف / الطلب..."></textarea>
+            <input type="file" id="approvalFileInput" class="file-input">
+            <div class="modal-actions">
+                <button class="btn-ghost" id="cancelApproval" data-i18n="cancel">إلغاء</button>
+                <button class="btn-primary" id="submitApproval" data-i18n="submit">إرسال</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="clientModal" class="modal hidden">
+        <div class="modal-box">
+            <h3 data-i18n="addClient">عميل جديد</h3>
+            <input type="text" id="clientNameInput" data-i18n-placeholder="clientNamePlaceholder" placeholder="اسم العميل">
+            <label class="field-label" data-i18n="deadline">تاريخ التسليم</label>
+            <input type="date" id="clientDeadlineInput">
+            <div class="modal-actions">
+                <button class="btn-ghost" id="cancelClient" data-i18n="cancel">إلغاء</button>
+                <button class="btn-primary" id="submitClient" data-i18n="submit">إضافة</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="taskModal" class="modal hidden">
+        <div class="modal-box">
+            <h3 data-i18n="addTask">إضافة تاسك</h3>
+            <input type="text" id="taskTitleInput" data-i18n-placeholder="taskTitlePlaceholder" placeholder="عنوان التاسك">
+            <textarea id="taskDescInput" rows="3" data-i18n-placeholder="descPlaceholder" placeholder="الوصف..."></textarea>
+            <div class="modal-actions">
+                <button class="btn-ghost" id="cancelTask" data-i18n="cancel">إلغاء</button>
+                <button class="btn-primary" id="submitTask" data-i18n="submit">إضافة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Panel -->
+    <div id="profilePanel" class="profile-panel hidden">
+        <div class="profile-header">
+            <button class="btn-ghost close-btn" id="closeProfile">✕</button>
+            <div class="profile-avatar" id="profileAvatar">ي</div>
+            <h2 id="profileName">—</h2>
+        </div>
+        <div class="profile-tabs">
+            <button class="tab active" data-ptab="tasks" data-i18n="myTasks">تاسكاتي</button>
+            <button class="tab" data-ptab="done" data-i18n="completedTasks">التاسكات المكتملة</button>
+            <button class="tab" data-ptab="msgs" data-i18n="messageLog">سجل الرسائل</button>
+        </div>
+        <div class="profile-body">
+            <div id="ptab-tasks" class="tab-content active"></div>
+            <div id="ptab-done" class="tab-content"></div>
+            <div id="ptab-msgs" class="tab-content"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
