@@ -68,7 +68,7 @@ const T = {
     daysLeft: "يوم متبقي", daysLate: "يوم تأخير", today: "اليوم",
     like: "إعجاب", dislike: "رفض", comment: "تعليق", addComment: "أضف تعليق...",
     takeTask: "أخذ", markDone: "تم", noFile: "بدون ملف",
-    allMembers: "الكل"
+    allMembers: "الكل", onlineNow: "متصل الآن", noOneOnline: "لا أحد متصل", youLabel: "أنت"
   },
   en: {
     appName: "Fikra Hub", appNameShort: "Fikra",
@@ -100,7 +100,7 @@ const T = {
     daysLeft: "days left", daysLate: "days late", today: "Today",
     like: "Like", dislike: "Dislike", comment: "Comment", addComment: "Add comment...",
     takeTask: "Take", markDone: "Done", noFile: "No file",
-    allMembers: "All"
+    allMembers: "All", onlineNow: "Online now", noOneOnline: "No one online", youLabel: "You"
   }
 };
 
@@ -117,6 +117,55 @@ let allApprovals = [];
 let allClients = [];
 let allTasks = [];
 let notifOk = false;
+let presenceUnsub = null;
+let presenceInterval = null;
+let onlineUsers = [];
+// last seen counts for badges
+const seenKey = () => 'fikra_seen_' + (user?.uid || 'x');
+function getSeen() {
+  try { return JSON.parse(localStorage.getItem(seenKey()) || '{}'); } catch { return {}; }
+}
+function setSeen(partial) {
+  const s = { ...getSeen(), ...partial };
+  localStorage.setItem(seenKey(), JSON.stringify(s));
+}
+function updateBadges() {
+  const s = getSeen();
+  const map = {
+    teamChat: allChatMsgs.length,
+    approvals: allApprovals.length,
+    clientProjects: allClients.length,
+    taskCenter: allTasks.filter(t => t.status !== 'done').length
+  };
+  Object.keys(map).forEach(page => {
+    const badge = document.querySelector(`[data-badge="${page}"]`);
+    if (!badge) return;
+    const cur = map[page];
+    const prev = s[page] ?? cur; // first time no badge
+    const diff = cur - (s[page] !== undefined ? s[page] : cur);
+    if (diff > 0) {
+      badge.classList.remove('hidden');
+      badge.classList.add('has-count');
+      badge.textContent = diff > 9 ? '9+' : String(diff);
+    } else {
+      badge.classList.add('hidden');
+      badge.classList.remove('has-count');
+      badge.textContent = '';
+    }
+  });
+}
+function markPageSeen(page) {
+  const map = {
+    teamChat: allChatMsgs.length,
+    approvals: allApprovals.length,
+    clientProjects: allClients.length,
+    taskCenter: allTasks.filter(t => t.status !== 'done').length
+  };
+  if (map[page] !== undefined) {
+    setSeen({ [page]: map[page] });
+    updateBadges();
+  }
+}
 
 // ---------- Helpers ----------
 const $ = id => document.getElementById(id);
@@ -213,13 +262,16 @@ auth.onAuthStateChanged(u => {
     $('userDisplayName').textContent = displayName;
     $('userAvatar').textContent = avatarLetter(displayName);
     startListeners();
+    startPresence();
     requestNotif();
+    markPageSeen('teamChat');
   } else {
     user = null;
     $('loginScreen').style.display = 'flex';
     $('dashboard').classList.add('hidden');
     unsubs.forEach(fn => fn && fn());
     unsubs = [];
+    stopPresence();
   }
 });
 
@@ -291,6 +343,7 @@ document.querySelectorAll('#navList li').forEach(li => {
       $('pageTitle').textContent = t()[key];
       $('pageTitle').setAttribute('data-i18n', key);
     }
+    markPageSeen(page);
     // reset client detail
     if (page === 'clientProjects') {
       $('clientDetail').classList.add('hidden');
@@ -369,6 +422,7 @@ function startListeners() {
       allChatMsgs = [];
       snap.forEach(d => allChatMsgs.push({ id: d.id, ...d.data() }));
       renderTeamChat(allChatMsgs);
+      updateBadges();
       // notif
       snap.docChanges().forEach(ch => {
         if (ch.type === 'added') {
@@ -384,6 +438,7 @@ function startListeners() {
       allApprovals = [];
       snap.forEach(d => allApprovals.push({ id: d.id, ...d.data() }));
       renderApprovals(allApprovals);
+      updateBadges();
     }));
 
   // Clients
@@ -397,6 +452,7 @@ function startListeners() {
       } else {
         renderClients(allClients);
       }
+      updateBadges();
     }));
 
   // Tasks
@@ -850,6 +906,71 @@ function renderGenericChat(box, msgs) {
   box.scrollTop = box.scrollHeight;
 }
 
+
+// ---------- Presence (online users) ----------
+function startPresence() {
+  if (!user) return;
+  const ref = db.collection('presence').doc(user.uid);
+
+  const beat = () => {
+    ref.set({
+      uid: user.uid,
+      name: displayName,
+      online: true,
+      lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).catch(() => {});
+  };
+  beat();
+  if (presenceInterval) clearInterval(presenceInterval);
+  presenceInterval = setInterval(beat, 25000);
+
+  window.addEventListener('beforeunload', () => {
+    ref.set({ online: false, lastSeen: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  });
+
+  if (presenceUnsub) presenceUnsub();
+  presenceUnsub = db.collection('presence').onSnapshot(snap => {
+    const now = Date.now();
+    onlineUsers = [];
+    snap.forEach(d => {
+      const data = d.data();
+      const ls = data.lastSeen?.toDate ? data.lastSeen.toDate().getTime() : 0;
+      // online if flagged and seen in last 70s
+      if (data.online && ls && (now - ls) < 70000) {
+        onlineUsers.push({ uid: data.uid || d.id, name: data.name || 'User' });
+      }
+    });
+    renderOnlineList();
+  });
+}
+
+function stopPresence() {
+  if (presenceInterval) { clearInterval(presenceInterval); presenceInterval = null; }
+  if (presenceUnsub) { presenceUnsub(); presenceUnsub = null; }
+  if (user) {
+    db.collection('presence').doc(user.uid).set({
+      online: false,
+      lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).catch(() => {});
+  }
+}
+
+function renderOnlineList() {
+  const el = $('onlineMembersList');
+  if (!el) return;
+  if (!onlineUsers.length) {
+    el.innerHTML = `<div class="online-empty">${t().noOneOnline}</div>`;
+    return;
+  }
+  el.innerHTML = onlineUsers.map(u => {
+    const isYou = u.uid === user?.uid;
+    return `<div class="online-member">
+      <span class="om-dot"></span>
+      <span class="om-name">${escapeHtml(u.name)}${isYou ? ' (' + t().youLabel + ')' : ''}</span>
+    </div>`;
+  }).join('');
+}
+
 // ---------- Notifications ----------
 function requestNotif() {
   if (!('Notification' in window)) return;
@@ -871,3 +992,10 @@ function showBrowserNotif(author, text) {
 // ---------- Init ----------
 applyLang(lang);
 applyTheme(theme);
+
+// Online dropdown toggle (touch-friendly)
+document.getElementById('onlineWrap')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  $('onlineWrap').classList.toggle('open');
+});
+document.addEventListener('click', () => $('onlineWrap')?.classList.remove('open'));

@@ -46,10 +46,10 @@
 
             <nav>
                 <ul id="navList">
-                    <li data-page="teamChat" class="active" data-icon="💬"><span data-i18n="navTeamChat">دردشة الفريق</span></li>
-                    <li data-page="approvals" data-icon="✅"><span data-i18n="navApprovals">الموافقات</span></li>
-                    <li data-page="clientProjects" data-icon="📁"><span data-i18n="navClientProjects">مشاريع العملاء</span></li>
-                    <li data-page="taskCenter" data-icon="📋"><span data-i18n="navTaskCenter">مركز التاسكات</span></li>
+                    <li data-page="teamChat" class="active" data-icon="💬"><span data-i18n="navTeamChat">دردشة الفريق</span><span class="nav-badge hidden" data-badge="teamChat"></span></li>
+                    <li data-page="approvals" data-icon="✅"><span data-i18n="navApprovals">الموافقات</span><span class="nav-badge hidden" data-badge="approvals"></span></li>
+                    <li data-page="clientProjects" data-icon="📁"><span data-i18n="navClientProjects">مشاريع العملاء</span><span class="nav-badge hidden" data-badge="clientProjects"></span></li>
+                    <li data-page="taskCenter" data-icon="📋"><span data-i18n="navTaskCenter">مركز التاسكات</span><span class="nav-badge hidden" data-badge="taskCenter"></span></li>
                 </ul>
             </nav>
 
@@ -80,7 +80,13 @@
                 <button id="mobileMenuBtn" class="mobile-menu-btn">☰</button>
                 <h1 id="pageTitle" data-i18n="pageTeamChat">دردشة الفريق</h1>
                 <div class="header-actions">
-                    <span id="onlineStatus" class="online-status" data-i18n="online">متصل</span>
+                    <div class="online-wrap" id="onlineWrap">
+                        <span id="onlineStatus" class="online-status"><span class="online-dot"></span><span data-i18n="online">متصل</span></span>
+                        <div class="online-dropdown" id="onlineDropdown">
+                            <div class="online-dropdown-title" data-i18n="onlineNow">متصل الآن</div>
+                            <div id="onlineMembersList" class="online-members-list"></div>
+                        </div>
+                    </div>
                 </div>
             </header>
 
