@@ -68,7 +68,13 @@ const T = {
     daysLeft: "يوم متبقي", daysLate: "يوم تأخير", today: "اليوم",
     like: "إعجاب", dislike: "رفض", comment: "تعليق", addComment: "أضف تعليق...",
     takeTask: "أخذ", markDone: "تم", noFile: "بدون ملف",
-    allMembers: "الكل", onlineNow: "متصل الآن", noOneOnline: "لا أحد متصل", youLabel: "أنت"
+    allMembers: "الكل", onlineNow: "متصل الآن", noOneOnline: "لا أحد متصل", youLabel: "أنت",
+    clearChat: "مسح الشات", clearDone: "مسح المكتمل", clearAllTasks: "مسح الكل",
+    confirmClearChat: "مسح كل رسائل الشات؟ لا يمكن التراجع.",
+    confirmClearDone: "مسح كل التاسكات المكتملة؟",
+    confirmClearAllTasks: "مسح كل التاسكات (المفتوحة والمكتملة)؟",
+    confirmDelMsg: "مسح هذه الرسالة؟", confirmDelTask: "مسح هذا التاسك؟",
+    deleted: "تم المسح"
   },
   en: {
     appName: "Fikra Hub", appNameShort: "Fikra",
@@ -100,7 +106,13 @@ const T = {
     daysLeft: "days left", daysLate: "days late", today: "Today",
     like: "Like", dislike: "Dislike", comment: "Comment", addComment: "Add comment...",
     takeTask: "Take", markDone: "Done", noFile: "No file",
-    allMembers: "All", onlineNow: "Online now", noOneOnline: "No one online", youLabel: "You"
+    allMembers: "All", onlineNow: "Online now", noOneOnline: "No one online", youLabel: "You",
+    clearChat: "Clear chat", clearDone: "Clear done", clearAllTasks: "Clear all",
+    confirmClearChat: "Delete all chat messages? This cannot be undone.",
+    confirmClearDone: "Delete all completed tasks?",
+    confirmClearAllTasks: "Delete ALL tasks (open and completed)?",
+    confirmDelMsg: "Delete this message?", confirmDelTask: "Delete this task?",
+    deleted: "Deleted"
   }
 };
 
@@ -498,6 +510,7 @@ function renderTeamChat(msgs, q = '') {
       <div class="message-meta">
         <span class="message-author">${own ? t().you : escapeHtml(m.author||'User')}</span>
         <span class="message-time">${formatTime(m.createdAt)}</span>
+        <button class="msg-del" title="Delete" onclick="deleteChatMsg('${m.id}')">✕</button>
       </div>
       <div class="message-text">${escapeHtml(m.text)}</div>`;
     frag.appendChild(div);
@@ -832,6 +845,7 @@ function taskCard(tk) {
       <div class="task-item-actions">
         ${isOpen ? `<button class="take-btn" onclick="takeTask('${tk.id}')">${t().takeTask}</button>` : ''}
         ${isMine && tk.status !== 'done' ? `<button class="done-btn" onclick="doneTask('${tk.id}')">${t().markDone}</button>` : ''}
+        <button class="del-btn" onclick="deleteTask('${tk.id}')">✕</button>
       </div>
     </div>`;
 }
@@ -970,6 +984,67 @@ function renderOnlineList() {
     </div>`;
   }).join('');
 }
+
+
+// ---------- Delete / Clear ----------
+window.deleteChatMsg = async function(id) {
+  if (!confirm(t().confirmDelMsg)) return;
+  try {
+    await db.collection('teamChat').doc(id).delete();
+    showToast(t().deleted, 'success');
+  } catch (e) { showToast(e.message, 'error'); }
+};
+
+window.deleteTask = async function(id) {
+  if (!confirm(t().confirmDelTask)) return;
+  try {
+    await db.collection('tasks').doc(id).delete();
+    showToast(t().deleted, 'success');
+  } catch (e) { showToast(e.message, 'error'); }
+};
+
+async function clearCollection(col, queryFn) {
+  let q = db.collection(col);
+  if (queryFn) q = queryFn(q);
+  const snap = await q.get();
+  const batchSize = 400;
+  let batch = db.batch();
+  let n = 0;
+  for (const doc of snap.docs) {
+    batch.delete(doc.ref);
+    n++;
+    if (n >= batchSize) {
+      await batch.commit();
+      batch = db.batch();
+      n = 0;
+    }
+  }
+  if (n > 0) await batch.commit();
+}
+
+document.getElementById('clearChatBtn')?.addEventListener('click', async () => {
+  if (!confirm(t().confirmClearChat)) return;
+  try {
+    await clearCollection('teamChat');
+    showToast(t().deleted, 'success');
+  } catch (e) { showToast(e.message, 'error'); }
+});
+
+document.getElementById('clearDoneTasksBtn')?.addEventListener('click', async () => {
+  if (!confirm(t().confirmClearDone)) return;
+  try {
+    await clearCollection('tasks', q => q.where('status', '==', 'done'));
+    showToast(t().deleted, 'success');
+  } catch (e) { showToast(e.message, 'error'); }
+});
+
+document.getElementById('clearAllTasksBtn')?.addEventListener('click', async () => {
+  if (!confirm(t().confirmClearAllTasks)) return;
+  try {
+    await clearCollection('tasks');
+    showToast(t().deleted, 'success');
+  } catch (e) { showToast(e.message, 'error'); }
+});
 
 // ---------- Notifications ----------
 function requestNotif() {

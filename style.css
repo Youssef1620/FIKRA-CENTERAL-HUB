@@ -539,6 +539,56 @@ nav ul li.active {
 }
 .btn-ghost:hover { background: var(--bg-elevated); }
 
+.btn-danger {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    padding: 11px 16px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.88rem;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: background var(--transition);
+}
+.btn-danger:hover { background: rgba(239, 68, 68, 0.22); }
+
+.btn-danger-outline {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    padding: 11px 16px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.88rem;
+    font-family: inherit;
+    white-space: nowrap;
+}
+.btn-danger-outline:hover { background: rgba(239, 68, 68, 0.1); }
+
+.msg-del {
+    background: transparent;
+    border: none;
+    color: inherit;
+    opacity: 0.35;
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0 4px;
+    margin-inline-start: 6px;
+    vertical-align: middle;
+}
+.msg-del:hover { opacity: 1; color: #ef4444; }
+.message.own .msg-del { color: #fff; opacity: 0.5; }
+.message.own .msg-del:hover { opacity: 1; }
+
+.task-item-actions button.del-btn {
+    color: var(--danger);
+    border-color: rgba(239,68,68,0.4);
+}
+
+
 /* Chat */
 .chat-container {
     flex-grow: 1;
